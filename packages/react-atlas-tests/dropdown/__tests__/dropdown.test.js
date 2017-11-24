@@ -25,8 +25,8 @@ describe("Test Dropdown component - Mouse tests", () => {
       </DropdownCore>
     );
 
-    expect(component.state().value).toEqual(null);
-    expect(component.state().output).toEqual("May");
+    expect(component.props().value).toEqual('');
+    expect(component.text()).toEqual('May');
   });
 
   it("Test Dropdown component - Basic test (disabled)", function() {
@@ -40,16 +40,16 @@ describe("Test Dropdown component - Mouse tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-
-    expect(component.state().value).toEqual(null);
-    expect(component.state().output).toEqual("May");
+  
+    expect(component.props().value).toEqual('');
+    expect(component.text()).toEqual('May');
 
     component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
+    expect(component.text()).toEqual('May');
     expect(component.state().active).toEqual(false);
 
     component.find("Dropdown").simulate("click");
-    expect(component.state().output).toEqual("May");
+    expect(component.text()).toEqual('May');
     expect(component.state().active).toEqual(false);
   });
 
@@ -71,10 +71,58 @@ describe("Test Dropdown component - Mouse tests", () => {
   //
   //		component.findWhere(n => _findItem(n, 'you')).simulate('mouseDown');
   //	});
-
+  
+  it("Test Dropdown component - Select one item: onChange", function() {
+    const _onChange = (inputValue) => {
+      this.component.setProps({value: inputValue});
+    };
+    this.component = mount(
+      <DropdownCore onChange={_onChange}>
+        <span value="May">May</span>
+        <span value="the">the</span>
+        <span value="force">force</span>
+        <span value="be">be</span>
+        <span value="with">with</span>
+        <span value="you">you</span>
+      </DropdownCore>
+    );
+    this.component.find("Dropdown").simulate("focus");
+    expect(this.component.text()).toEqual('May');
+    expect(this.component.state().focus).toEqual(true);
+    this.component.find("Button").simulate("click");
+    expect(this.component.state().active).toEqual(true);
+    
+    this.component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
+    expect(this.component.text()).toEqual('you');
+  });
+  
+  it("Test Dropdown component - Select one item: onClick", function() {
+    const _onClick = (inputValue) => {
+      this.component.setProps({value: inputValue});
+    };
+    this.component = mount(
+      <DropdownCore onClick={_onClick}>
+        <span value="May">May</span>
+        <span value="the">the</span>
+        <span value="force">force</span>
+        <span value="be">be</span>
+        <span value="with">with</span>
+        <span value="you">you</span>
+      </DropdownCore>
+    );
+    this.component.find("Dropdown").simulate("focus");
+    expect(this.component.text()).toEqual('May');
+    expect(this.component.state().focus).toEqual(true);
+    this.component.find("Button").simulate("click");
+    expect(this.component.state().active).toEqual(true);
+    
+    this.component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
+    expect(this.component.text()).toEqual('you');
+  });
+  
   it("Test Dropdown component - Select one item", function() {
-    const component = mount(
-      <DropdownCore onChange={function() {}} onClick={function() {}}>
+    this.component = mount(
+      <DropdownCore>
         <span value="May">May</span>
         <span value="the">the</span>
         <span value="force">force</span>
@@ -83,68 +131,10 @@ describe("Test Dropdown component - Mouse tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
-    component.find("Button").simulate("click");
-    expect(component.state().active).toEqual(true);
-
-    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
-
-    expect(component.state().value).toEqual("you");
-    expect(component.state().index).toEqual(5);
-
-    component.find("Dropdown").simulate("focus");
-  });
-
-  it("Test Dropdown component - Select one item - no onChange", function() {
-    const component = mount(
-      <DropdownCore onClick={function() {}}>
-        <span value="May">May</span>
-        <span value="the">the</span>
-        <span value="force">force</span>
-        <span value="be">be</span>
-        <span value="with">with</span>
-        <span value="you">you</span>
-      </DropdownCore>
-    );
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
-    component.find("Button").simulate("click");
-    expect(component.state().active).toEqual(true);
-
-    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
-
-    expect(component.state().value).toEqual("you");
-    expect(component.state().index).toEqual(5);
-
-    component.find("Dropdown").simulate("focus");
-  });
-
-  it("Test Dropdown component - Select one item - no onClick", function() {
-    const component = mount(
-      <DropdownCore onChange={function() {}}>
-        <span value="May">May</span>
-        <span value="the">the</span>
-        <span value="force">force</span>
-        <span value="be">be</span>
-        <span value="with">with</span>
-        <span value="you">you</span>
-      </DropdownCore>
-    );
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
-    component.find("Button").simulate("click");
-    expect(component.state().active).toEqual(true);
-
-    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
-
-    expect(component.state().value).toEqual("you");
-    expect(component.state().index).toEqual(5);
-
-    component.find("Dropdown").simulate("focus");
+    this.component.find("Button").simulate("click");
+    this.component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
+    
+    expect(this.component.state().index).toEqual(5);
   });
 
   it("Test Dropdown component - Select one item (twice)", function() {
@@ -159,39 +149,15 @@ describe("Test Dropdown component - Mouse tests", () => {
       </DropdownCore>
     );
 
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
     component.find("Button").simulate("click");
     expect(component.state().active).toEqual(true);
 
-    let item = component.findWhere(n => _findItem(n, "you"));
-    item.simulate("mouseDown");
-    item.simulate("click");
-    expect(component.state().value).toEqual("you");
+    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
     expect(component.state().index).toEqual(5);
 
-    component.find("Dropdown").simulate("focus");
     component.find("Button").simulate("click");
     component.findWhere(n => _findItem(n, "May")).simulate("mouseDown");
-    expect(component.state().value).toEqual("May");
     expect(component.state().index).toEqual(0);
-  });
-
-  it("Test Dropdown component - Click with custon onClick Dropdown", function() {
-    const component = mount(
-      <DropdownCore onChange={function() {}} onClick={function() {}}>
-        <span value="May">May</span>
-        <span value="the">the</span>
-        <span value="force">force</span>
-        <span value="be">be</span>
-        <span value="with">with</span>
-        <span value="you">you</span>
-      </DropdownCore>
-    );
-    component.find("Dropdown").simulate("focus");
-    component.find("Button").simulate("click");
-    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
   });
 
   it("Test Dropdown component - Simple Click on Dropdown with onBeforeChange(false)", function() {
@@ -210,11 +176,9 @@ describe("Test Dropdown component - Mouse tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-    component.find("Dropdown").simulate("focus");
     component.find("Button").simulate("click");
-    let item = component.findWhere(n => _findItem(n, "you"));
-    item.simulate("mouseDown");
-    item.simulate("click");
+    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
+    expect(component.state().index).toEqual(0);
   });
 
   it("Test Dropdown component - Simple Click on Dropdown with onBeforeChange(true)", function() {
@@ -233,18 +197,19 @@ describe("Test Dropdown component - Mouse tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-    component.find("Dropdown").simulate("focus");
     component.find("Button").simulate("click");
-    let item = component.findWhere(n => _findItem(n, "you"));
-    item.simulate("mouseDown");
-    item.simulate("click");
+    component.findWhere(n => _findItem(n, "you")).simulate("mouseDown");
+    expect(component.state().index).toEqual(5);
   });
 });
 
 describe("Test Dropdown component - Keyboard tests", () => {
   it("Test Dropdown component - Select one item (only ArrowDown used)", function() {
-    const component = mount(
-      <DropdownCore onChange={function() {}} onClick={function() {}}>
+    const _onChange = (inputValue) => {
+      this.component.setProps({value: inputValue});
+    };
+    this.component = mount(
+      <DropdownCore onChange={_onChange}>
         <span value="May">May</span>
         <span value="the">the</span>
         <span value="force">force</span>
@@ -253,23 +218,20 @@ describe("Test Dropdown component - Keyboard tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
-
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "Enter" });
-
-    expect(component.state().value).toEqual("be");
-    expect(component.state().output).toEqual("be");
-    expect(component.state().index).toEqual(3);
+    this.component.find("Dropdown").simulate("focus");
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "Enter" });
+    expect(this.component.state().index).toEqual(3);
   });
 
   it("Test Dropdown component - Select one item (ArrowDown & ArrowUp used)", function() {
-    const component = mount(
-      <DropdownCore onChange={function() {}} onClick={function() {}}>
+    const _onChange = (inputValue) => {
+      this.component.setProps({value: inputValue});
+    };
+    this.component = mount(
+      <DropdownCore onChange={_onChange}>
         <span value="May">May</span>
         <span value="the">the</span>
         <span value="force">force</span>
@@ -278,19 +240,16 @@ describe("Test Dropdown component - Keyboard tests", () => {
         <span value="you">you</span>
       </DropdownCore>
     );
-    component.find("Dropdown").simulate("focus");
-    expect(component.state().output).toEqual("May");
-    expect(component.state().focus).toEqual(true);
+    this.component.find("Dropdown").simulate("focus");
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "ArrowUp" });
+    this.component.find("Dropdown").simulate("keyDown", { key: "Enter" });
 
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowDown" });
-    component.find("Dropdown").simulate("keyDown", { key: "ArrowUp" });
-    component.find("Dropdown").simulate("keyDown", { key: "Enter" });
-
-    expect(component.state().value).toEqual("force");
-    expect(component.state().output).toEqual("force");
-    expect(component.state().index).toEqual(2);
+    expect(this.component.props().value).toEqual("force");
+    expect(this.component.text()).toEqual("force");
+    expect(this.component.state().index).toEqual(2);
   });
 
   it("Test Dropdown component - Select last item (only ArrowDown used)", function() {

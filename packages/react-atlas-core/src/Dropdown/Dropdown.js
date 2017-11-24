@@ -466,7 +466,8 @@ Dropdown.defaultProps = {
   "className": "",
   "required": false,
   "disabled": false,
-  "isValid": true
+  "isValid": true,
+  "value": ''
 };
 
 export default Dropdown;
