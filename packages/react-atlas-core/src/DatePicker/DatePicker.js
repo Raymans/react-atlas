@@ -8,9 +8,18 @@ class DatePicker extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      "startDate": moment()
+      "startDate": moment(this.props.selected)|| moment()
     };
     this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (
+      typeof nextProps.selected !== "undefined" &&
+      nextProps.selected !== this.state.selected
+    ) {
+      this.setState({ "startDate": moment(nextProps.selected) });
+    }
   }
 
   handleChange(date, event) {
@@ -39,22 +48,39 @@ class DatePicker extends React.PureComponent {
 }
 
 DatePicker.propTypes = {
-  "name": PropTypes.string,
+  /**
+   * An object, array, or string of CSS classes to apply to DatePicker.
+   */
+  "className": PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object,
+      PropTypes.array
+  ]),
+
+  /**
+   * A date format that will be applied to the displayed date.  Default is MM/DD/YYYY.
+   */
   "format": PropTypes.string,
-  "value": PropTypes.string,
+
+  /**
+   * The name that will be applied to the input element.
+   */
+  "name": PropTypes.string,
+
+  /**
+   *  The function that will be executed on change.
+   */
   "onChange": PropTypes.func,
+
+  /**
+   * The currently selected Date.
+   */
+  "selected": PropTypes.string,
+
   /**
    * Pass inline styles here.
    */
-  "style": PropTypes.object,
-  /*
-   * An Object, array, or string of CSS classes to apply to DatePicker.
-   */
-  "className": PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object,
-    PropTypes.array
-  ])
+  "style": PropTypes.object
 };
 
 export default DatePicker;

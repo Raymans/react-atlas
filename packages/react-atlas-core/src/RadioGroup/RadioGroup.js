@@ -22,10 +22,9 @@ class RadioGroup extends React.PureComponent {
     });
   }
 
-  componentWillReceiveProps (nextProps) {
-    console.log('nextProps.selectedValue: ', nextProps.selectedValue)
+  componentWillReceiveProps(nextProps) {
     if (nextProps.selectedValue) {
-      this.setState({ "checkedRadio": nextProps.selectedValue })
+      this.setState({ "checkedRadio": nextProps.selectedValue });
     }
   }
 
@@ -117,6 +116,6 @@ RadioGroup.propTypes = {
 
 RadioGroup.defaultProps = {
   "selectedValue": null
-}
+};
 
 export default RadioGroup;

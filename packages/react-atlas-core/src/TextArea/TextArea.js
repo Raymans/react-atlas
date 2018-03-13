@@ -17,13 +17,13 @@ class TextArea extends React.PureComponent {
       isValid = props.isValid;
     }
 
-    if (this.props.tooltip && !this.props.header) {
-      throw "Tooltip requires Header";
+    if (this.props.tooltip && !this.props.label) {
+      throw "Tooltip requires Label";
     }
 
     // Initial state
     this.state = {
-      "value": props.value || "",
+      "value": typeof props.value === "undefined" || props.value === null ? "" : props.value,
       "remaining": props.maxLength,
       "active": false,
       "isValid": isValid
@@ -68,8 +68,9 @@ class TextArea extends React.PureComponent {
 
   render() {
     const {
+      id,
       name,
-      header,
+      label,
       placeholder,
       maxLength,
       resizable,
@@ -82,30 +83,52 @@ class TextArea extends React.PureComponent {
       className,
       style,
       tooltip,
-      tooltipRight
+      tooltipRight,
+      leftLabel,
+      rows
     } = this.props;
 
     let tooltipClasses = cx({
-      "tooltipAlignment": true,
-      "tooltipRight": tooltipRight
+        "tooltipAlignment": true,
+        "tooltipRight": tooltipRight
     });
 
-    let remainingCount = maxLength &&
+    let tooltipInternalClasses = cx({
+        "ra_Tooltip__tooltip": true,
+        "ra_Tooltip__active": true,
+        "ra_Tooltip__tooltip-right": true,
+        "ra_Tooltip__tooltipContent": true,
+        "ra_Tooltip__block": true
+    });
+
+    let remainingCount = maxLength && 
       <div styleName={"remainingCount"}>
         {maxLength - this.state.remaining}/{maxLength}
       </div>
     ;
+    const forId = id !== "" && name !== "" ? id : "";
 
-    let textAreaHeader = header &&
-      <div styleName={"header"}>
-        <span styleName={"headerFont"}>{header}</span>
-        {required && <span styleName={"error_text"}> *</span>}
-        {tooltip &&
-          <span styleName={tooltipClasses}>
-            <TooltipCore text={tooltip} position="top" />
-          </span>
-        }
-      </div>
+    let labelClasses = cx({
+        "leftLabel": leftLabel,
+        "label": true,
+        "labelFont": true,
+        "labelSpacing": true
+    });
+
+    let textAreaLabel = label &&
+        <label styleName={labelClasses} title={label} htmlFor={forId}>
+          <span styleName={"headerFont"}>{label}</span>
+            {required && <span styleName={"error_text"}> *</span>}
+            {tooltip &&
+            <span styleName={tooltipClasses}>
+              <TooltipCore
+                  className={tooltipInternalClasses}
+                  text={tooltip}
+                  position="top"
+              />
+            </span>
+            }
+        </label>
     ;
 
     let wrapperClasses = cx(
@@ -128,6 +151,12 @@ class TextArea extends React.PureComponent {
       "textarea"
     );
 
+      const contentClasses = cx({
+          "content": true,
+          "leftLabelContent": leftLabel,
+          "fullWidth": true
+      });
+
     return (
       <div
         style={style}
@@ -136,20 +165,24 @@ class TextArea extends React.PureComponent {
         onBlur={this._handleBlur}
         className={cx(className)}
       >
-        {textAreaHeader}
-        <InputCore
-          multiline
-          name={name}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          styleName={textAreaClasses}
-          onChange={this._handleChange}
-          required={required}
-          disabled={disabled}
-          hidden={hidden}
-          value={this.state.value}
-          isValid={this.state.isValid}
-        />
+        {textAreaLabel}
+        <div styleName={contentClasses}>
+            <InputCore
+              id={id}
+              multiline
+              rows={rows}
+              name={name}
+              placeholder={placeholder}
+              maxLength={maxLength}
+              styleName={textAreaClasses}
+              onChange={this._handleChange}
+              required={required}
+              disabled={disabled}
+              hidden={hidden}
+              value={this.state.value}
+              isValid={this.state.isValid}
+            />
+        </div>
         {remainingCount}
       </div>
     );
@@ -165,9 +198,14 @@ TextArea.propTypes = {
     PropTypes.array
   ]),
   /**
-	 * Define a name for the textarea input.
-	 * @examples '<TextArea name="test"/>'
-	 */
+    * Define a name for the textarea input.
+    * @examples '<TextArea id="test"/>'
+    */
+  "id": PropTypes.string,
+  /**
+   * Define a name for the textarea input.
+   * @examples '<TextArea name="test"/>'
+   */
   "name": PropTypes.string,
   /**
    * Define a value for the textarea input.
@@ -175,33 +213,33 @@ TextArea.propTypes = {
    */
   "value": PropTypes.string,
   /**
-   * Define a title or header to be displayed above the textarea.
-   * @examples '<TextArea header="test"/>'
+   * Define a title or label to be displayed above the textarea.
+   * @examples '<TextArea label="test"/>'
    */
-  "header": PropTypes.string,
+  "label": PropTypes.string,
   /**
    * Defines a resizable textarea. Default: true.
    * @examples '<TextArea resizable={false}/>'
    */
   "resizable": PropTypes.bool,
   /**
-	 * Defines a small sized textarea.
-	 * @examples '<TextArea small/>'
-	 */
+   * Defines a small sized textarea.
+   * @examples '<TextArea small/>'
+   */
   "small": PropTypes.bool,
   /**
-	 * Defines a medium sized textarea.
-	 * @examples '<TextArea medium/>'
-	 */
+   * Defines a medium sized textarea.
+   * @examples '<TextArea medium/>'
+   */
   "medium": PropTypes.bool,
   /**
-	 * Defines a large sized textarea.
-	 * @examples '<TextArea large/>'
-	 */
+   * Defines a large sized textarea.
+   * @examples '<TextArea large/>'
+   */
   "large": PropTypes.bool,
   /**
    * Sets a maximum character length that will be validated onChange.
-   * @examples '<TextArea maxLenght={25}/>'
+   * @examples '<TextArea maxLength={25}/>'
    */
   "maxLength": PropTypes.number,
   /**
@@ -210,9 +248,9 @@ TextArea.propTypes = {
    */
   "placeholder": PropTypes.string,
   /**
-	 * Sets a handler function to be executed when onChange event occurs (at input element).
-	 * @examples <TextArea onChange={this.customOnChangeFunc}/>
-	 */
+   * Sets a handler function to be executed when onChange event occurs (at input element).
+   * @examples <TextArea onChange={this.customOnChangeFunc}/>
+   */
   "onChange": PropTypes.func,
   /**
    * Sets the field as required. Will be validated onChange.
@@ -220,29 +258,41 @@ TextArea.propTypes = {
    */
   "required": PropTypes.bool,
   /**
-	 * Determines if the textarea is disabled.
-	 * @examples '<TextArea disabled/>'
-	 */
+   * Determines if the textarea is disabled.
+   * @examples '<TextArea disabled/>'
+   */
   "disabled": PropTypes.bool,
   /**
-	 * Determines if the textarea is hidden.
-	 * @examples '<TextArea hidden/>'
-	 */
+   * Determines if the textarea is hidden.
+   * @examples '<TextArea hidden/>'
+   */
   "hidden": PropTypes.bool,
-
-  /** passes tooltip as prop if added to textArea */
+  /**
+   * Set the tooltip value *
+   */
   "tooltip": PropTypes.string,
   /** Pass inline styling here. */
   "style": PropTypes.object,
-
-  "tooltipRight": PropTypes.bool
+  /**
+   * Positions the tooltip to the right. Default true.
+   */
+  "tooltipRight": PropTypes.bool,
+  /**
+   * Allows user to move the label to the left of the TextArea instead of having it on top
+   */
+  "leftLabel": PropTypes.bool,
+  /**
+    * Specifies the amount of rows
+    */
+  "rows": PropTypes.number
 };
 
 TextArea.defaultProps = {
   "className": "",
   "resizable": true,
   "disabled": false,
-  "hidden": false
+  "hidden": false,
+  "tooltipRight": true
 };
 
 export default TextArea;

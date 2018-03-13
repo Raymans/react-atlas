@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import InputMask from "inputmask-core";
 import { utils } from "../utils";
 import cx from "classnames";
-import messages from "../utils/messages";
 
 /**
  * Master Input component. To be used as core for different input types
@@ -15,13 +14,20 @@ class Input extends React.PureComponent {
     super(props);
 
     // Initial state
-    this.state = {"value": "", "errorText": "This field is required."};
+    this.state = {
+      "value":
+        typeof props.value === "undefined" || props.value === null
+          ? ""
+          : props.value,
+
+      "errorText": "This field is required."
+    };
 
     // Configure input mask if required
-    if(this.props.mask) {
+    if (this.props.mask) {
       let maskOptions = {
-        "pattern": this.props.mask,
-        "value": this.props.value
+        "pattern": props.mask,
+        "value": props.value || ""
       };
 
       this.mask = new InputMask(maskOptions);
@@ -36,7 +42,7 @@ class Input extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.setState({"isValid": this.props.isValid});
+    this.setState({ "isValid": this.props.isValid });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -51,7 +57,12 @@ class Input extends React.PureComponent {
         "isValid": nextProps.isValid
       });
     }
-}
+    if (nextProps.value && nextProps.value !== this.props.value) {
+      this.setState({
+        "value": nextProps.value
+      });
+    }
+  }
 
   _updateMaskSelection = () => {
     this.mask.selection = utils.getSelection(this.input);
@@ -168,18 +179,13 @@ class Input extends React.PureComponent {
 
     /* Execute custom validator and change state and error messages accordingly */
     const customValidationPass = function() {
-      let valid = this.props.validator(inputValue);
-      if (!valid) {
-        return false;
-      } else {
-        return true;
-      }
+      return this.props.validator(inputValue);
     };
 
     /* If the field is required, and it has no value, change state and display error message */
     if (!inputValue.length && this.props.required) {
       this.setState({
-        "errorText": this.props.requiredText || "This field is required.",
+        "errorText": this.props.errorText || "This field is required.",
         "isValid": false
       });
     } else if (this.props.validator) {
@@ -228,6 +234,10 @@ class Input extends React.PureComponent {
 
     let valid = this._validate(inputValue);
 
+    if (this.props.uppercase) {
+      inputValue = inputValue.toUpperCase();
+    }
+
     if (valid !== false) {
       this.setState(
         {
@@ -250,13 +260,16 @@ class Input extends React.PureComponent {
       large,
       type,
       name,
+      id,
       multiline,
       placeholder,
       disabled,
       hidden,
       errorLocation,
       checked,
-      style
+      style,
+      rows,
+      required
     } = this.props;
 
     /* If checkbox, we need to render only input component (no wrappers) */
@@ -264,18 +277,22 @@ class Input extends React.PureComponent {
     let isRadio = type === "radio";
     const isInput = isCheckbox || isRadio ? false : true;
 
+    let containerClasses = cx({
+      "max": !small && !medium && !large && !isRadio && !isCheckbox,
+      "container": true,
+      "container-disabled": disabled
+    });
+
     let inputClasses = cx({
       "input": isInput,
-      "checkbox": isCheckbox,
       "invalid": !this.state.isValid,
       "blockInput": errorLocation === "bottom",
       "small": small,
       "medium": medium,
       "large": large,
-      "max": !small && !medium && !large,
+      "max": !small && !medium && !large && !isRadio && !isCheckbox,
       disabled,
-      hidden,
-      "opacity": true
+      hidden
     });
 
     let eventHandlers = {
@@ -283,26 +300,33 @@ class Input extends React.PureComponent {
       "onChange": this._handleChange,
       "onKeyDown": this._handleKeyDown,
       "onKeyPress": this._handleKeyPress,
-      "onPaste": this._handlePaste
+      "onPaste": this._handlePaste,
+      "onBlur": this._handleChange
     };
 
-    let inputElement = multiline ?
+    let inputElement = multiline ? 
       <textarea
+        id={id}
         name={name}
+        rows={rows}
         value={this.state.value}
         placeholder={placeholder}
         styleName={inputClasses}
         className={cx(className)}
         onChange={this._handleChange}
+        onBlur={this._handleChange}
+        required={required}
       />
-     :
+     : 
       <input
         type={type}
         name={name}
+        id={id}
         value={this.state.value}
         placeholder={placeholder}
         styleName={inputClasses}
         className={cx(className)}
+        required={required}
         ref={input => {
           this.input = input;
         }}
@@ -310,22 +334,23 @@ class Input extends React.PureComponent {
       />
     ;
 
-    let errorTextElement = this.state.errorText &&
-      <span className={"ra_Input__error"}>{this.state.errorText}</span>
+    let errorTextElement = this.state.errorText && 
+      <span styleName={cx("error")}>{this.state.errorText}</span>
     ;
 
-    return isCheckbox ?
+    return isCheckbox ? 
       <input
         style={style}
         type="checkbox"
         name={name}
-        styleName={inputClasses}
         className={cx(className)}
+        id={id}
         checked={checked}
+        required={required}
         {...eventHandlers}
-      />
-     :
-      <div className={"ra_Input__container"}>
+      /> // No styleName prop is needed on checkbox because opacity is set to 0.
+     : 
+      <div styleName={containerClasses}>
         {inputElement}
         {this.state.isValid ? null : errorTextElement}
       </div>
@@ -346,6 +371,11 @@ Input.propTypes = {
    * @examples 'text', 'checkbox', 'radio', 'password', 'email'
    */
   "type": PropTypes.string,
+  /**
+   * Defines an id for the input.
+   * @examples '<Input type="text" id="test"/>'
+   */
+  "id": PropTypes.string,
   /**
    * Defines a name for the input.
    * @examples '<Input type="text" name="test"/>'
@@ -437,20 +467,28 @@ Input.propTypes = {
    */
   "validator": PropTypes.func,
   /**
-     * Sets a handler function to be executed before onChange event occurs (executed onClick).
-     * @examples <Input type="text" onBeforeChange={this.customOnClickFunc}/>
-     */
+   * Sets a handler function to be executed before onChange event occurs (executed onClick).
+   * @examples <Input type="text" onBeforeChange={this.customOnClickFunc}/>
+   */
   "onBeforeChange": PropTypes.func,
   /**
-     * Sets a handler function to be executed when onChange event occurs.
-     * @examples <Input type="text" onChange={this.customOnChangeFunc}/>
-     */
+   * Sets a handler function to be executed when onChange event occurs.
+   * @examples <Input type="text" onChange={this.customOnChangeFunc}/>
+   */
   "onChange": PropTypes.func,
 
   /**
    * Pass inline styling here.
    */
-  "style": PropTypes.object
+  "style": PropTypes.object,
+  /**
+   * Converts all entered text to uppercase.
+   */
+  "uppercase": PropTypes.bool,
+  /**
+   * Specifies the amount of rows
+   */
+  "rows": PropTypes.number
 };
 
 Input.defaultProps = {

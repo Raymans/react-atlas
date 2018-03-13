@@ -27,6 +27,9 @@ class Button extends React.PureComponent {
       icon,
       type,
       href,
+      ignoreTab,
+      id,
+      name,
       style
     } = this.props;
 
@@ -60,7 +63,8 @@ class Button extends React.PureComponent {
         "disabled": disabled,
         "large": large,
         "small": small,
-        "button": true
+        "button": true,
+        "uppercase": !link
       },
       mainStyle
     );
@@ -77,102 +81,117 @@ class Button extends React.PureComponent {
       iconClass = "ra_Button__icon-left";
     }
 
-    let btn =  <button onClick={onClick}
-                          className={cx(className)}
-                          styleName={classes}
-                          style={style}
-                          type={type}
-                          href={href}>
-                            {icon ? <i className={cx(icon, iconClass)} /> : null}
-                            {text}
-                        </button>
-    
-    let renderButton = btn;
-    if(href) {
-      renderButton = <a href={href}>{btn}</a>
-    }                      
+    let btn = 
+      <button
+        onClick={onClick}
+        className={cx(className)}
+        styleName={classes}
+        style={style}
+        type={type}
+        href={href}
+        tabIndex={ignoreTab ? -1 : 0}
+        id={id}
+        name={name}
+      >
+        {icon ? <i className={cx(icon, iconClass)} /> : null}
+        {text}
+      </button>
+    ;
 
-    return (
-      renderButton
-    );
+    let renderButton = btn;
+    if (href) {
+      renderButton = <a href={href}>{btn}</a>;
+    }
+
+    return renderButton;
   }
 }
 
 Button.propTypes = {
-  /** HTML5 button type, eg submit, button, etc */
-  "type": PropTypes.string,
-  /** The URL to link to. */
-  "href": PropTypes.string,
   /**
-     * Define a mini button.
-     *
-     */
-  "children": PropTypes.node,
-  /**
-   * Click event handler.
+   * Children should be either a string, an icon/glyphicon, or an image tag.
+   *
    */
-  "onClick": PropTypes.func,
-  /** An Object, array, or string of CSS classes to apply to button.*/
+  "children": PropTypes.node,
+  /** An object, array, or string of CSS classes to apply to Button.*/
   "className": PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.object,
     PropTypes.array
   ]),
   /**
-     * define a custom css class name
-     * @examples "btn", "btn-active"
-     */
+   *When true, Button component will be disabled.
+   * @examples <Button disabled/>
+   */
   "disabled": PropTypes.bool,
   /**
-     * use outline styled button
-     * @examples <Button outline>
-     */
-  "outline": PropTypes.bool,
-  /**
-     * define button href if anchor
-     * @examples '#', 'http://some-website.com/'
-     */
-  "primary": PropTypes.bool,
-  /**
-     * use secondary style button
-     * @examples <Button secondary>
-     */
-  "secondary": PropTypes.bool,
-  /**
-     * use warning style button
-     * @examples <Button warning>
-     */
-  "warning": PropTypes.bool,
-  /**
-     * use error style button
-     * @examples <Button error>
-     */
+   * Will display error style button.
+   * @examples <Button error>
+   */
   "error": PropTypes.bool,
+  /** The URL that the Button will link to. */
+  "href": PropTypes.string,
   /**
-     * use link style button
-     * @examples <Button link>
-     */
-  "link": PropTypes.bool,
+   * The className of the icon you want to set.
+   */
+  "icon": PropTypes.string,
   /**
-     * use large style button
-     * @examples <Button large>
-     */
+   * Will set the html "id" property on the Button.
+   */
+  "id": PropTypes.string,
+  /**
+   * Button will be ignored by keyboard navigation when set to true.
+   */
+  "ignoreTab": PropTypes.bool,
+  /**
+   * Will display large style Button.
+   * @examples <Button large>
+   */
   "large": PropTypes.bool,
   /**
-     * use small style button
-     * @examples <Button small>
-     */
+   * Will display large style Button.
+   * @examples <Button link>
+   */
+  "link": PropTypes.bool,
+  /**
+   * Will set the html "name" property on the Button.
+   */
+  "name": PropTypes.string,
+  /**
+   * Click event handler for the Button.
+   */
+  "onClick": PropTypes.func,
+  /**
+   * Will display outline styled Button.
+   * @examples <Button outline>
+   */
+  "outline": PropTypes.bool,
+  /**
+   * Will display primary style Button.
+   * @examples <Button primary>
+   */
+  "primary": PropTypes.bool,
+  /**
+   * Will display secondary style Button.
+   * @examples <Button secondary>
+   */
+  "secondary": PropTypes.bool,
+  /**
+   * Will display small style Button.
+   * @examples <Button small>
+   */
   "small": PropTypes.bool,
-
   /**
-    * The class name of the icon you want to set.
-    */
-  "icon": PropTypes.string,
-
+   * Pass inline styles here.
+   */
+  "style": PropTypes.object,
+  /** HTML5 button type, eg submit, button, etc. */
+  "type": PropTypes.string,
   /**
-    * Pass inline styles here.
-    */
-  "style": PropTypes.object
+   * Will display warning style Button.
+   * @examples <Button warning>
+   */
+  "warning": PropTypes.bool
 };
 
 Button.defaultProps = {
@@ -186,7 +205,8 @@ Button.defaultProps = {
   "large": false,
   "small": false,
   "disabled": false,
-  "type": "button"
+  "type": "button",
+  "ignoreTab": false
 };
 
 export default Button;

@@ -8,16 +8,15 @@ class Switch extends React.PureComponent {
     super(props);
     // Initial state
     this.state = {
-      "checked": this.props.checked || false
+      "checked": this.props.checked || false,
+      "disabled": this.props.disabled || false,
+      "valid": true
     };
 
     /* Classes and styles setup */
     let small = this.props.small && !this.props.medium && !this.props.large,
       medium = !this.props.small && !this.props.large,
       large = this.props.large && !this.props.medium && !this.props.small,
-      disabled = this.props.disabled,
-      hidden = this.props.hidden,
-      offColor = this.props.offColor,
       onColor = this.props.onColor,
       buttonColor = this.props.buttonColor;
 
@@ -25,35 +24,30 @@ class Switch extends React.PureComponent {
       "sliderSmall": small,
       "sliderMedium": medium,
       "sliderLarge": large,
-      disabled,
-      hidden
+      "sliderEnabledOffColor": !this.state.disabled,
+      "sliderDisabledOffColor": this.state.disabled
     });
 
     let inputClassName = cx({
       "inputSmall": small,
       "inputMedium": medium,
-      "inputLarge": large,
-      disabled,
-      hidden
+      "inputLarge": large
     });
 
     let buttonClassName = cx({
       "handleSmall": small,
       "handleMedium": medium,
       "handleLarge": large,
-      disabled,
-      hidden
+      "handleDisabledColor": this.state.disabled,
+      "handleEnabledColor": !this.state.disabled
     });
 
     let onClassName = cx({
       "onColorSmall": small,
       "onColorMedium": medium,
-      "onColorLarge": large
+      "onColorLarge": large,
+      "sliderDisabledOnColor": this.state.disabled
     });
-
-    let offColorStyle = {
-      "background": offColor
-    };
 
     let onColorStyle = {
       "background": onColor
@@ -71,89 +65,142 @@ class Switch extends React.PureComponent {
     };
 
     this.styles = {
-      offColorStyle,
       onColorStyle,
       buttonColorStyle
     };
   }
 
-  _onBeforeChange = callback => {
-    let triggerChange = true;
-    if (this.props.onBeforeChange) {
-      triggerChange = this.props.onBeforeChange(this.state.checked);
-    }
-    /**
-     * allow the user to prevent the execution of onChange event by passing a
-     * function that returns a falsy value. If onClick handler is not specified,
-     * onChange function will be called by default.
-    **/
-    if (triggerChange) {
-      callback();
-    }
+  componentWillReceiveProps = (nextProps) =>  {
+      if(nextProps.checked !== this.props.checked) {
+        this.setState({ "checked": !this.state.checked })
+      }
+      if(nextProps.disabled !== this.props.disabled) {
+        this.setState({ "disabled": !this.state.disabled })
+      }
   };
 
-  _handleBeforeChange = () => {
-    /**
-     * We need to execute onClick function, and when it's done, execute onChange function.
-     * If onClick is not passed, it will only execute onChange.
-     * Callback approach was taken instead of promises/generators as team decision to
-     * avoid adding a new dependency like bluebird (native es6 promises are slower)
-    **/
-    this._onBeforeChange(() => {
-      this._handleChange();
-    });
-  };
+  // Handles new checkbox clicks and sets value and checked status of hidden input
+  _clickHandler = () => {
+    if (!this.state.disabled) {
+      if (typeof this.props.onBeforeChange !== "undefined") {
+        let result = this.props.onBeforeChange(this.state.checked);
+        if(result === false) {
+          return;
+        }
+      }
 
-  _handleChange = () => {
-    if (this.state.checked === true) {
-      this.setState({ "checked": false });
-    } else {
-      this.setState({ "checked": true });
+      this.setState({ "checked": !this.state.checked }, function() {
+        /* Check if onClick has been passed, if so call it. */
+        if (typeof this.props.onClick !== "undefined") {
+          this.props.onClick(
+            this.state.checked,
+            this.state.disabled
+          );
+        }
+        /* Check if onChange has been passed, if so call it. */
+        if (typeof this.props.onChange !== "undefined") {
+          this.props.onChange(
+            this.state.checked,
+            this.state.disabled
+          );
+        }
+      });
     }
   };
 
   render() {
-    const { className, name, disabled, hidden, style, inline } = this.props;
+    const {
+      label,
+      leftLabel,
+      className, 
+      name, 
+      hidden, 
+      style,
+      inline,
+      id
+    } = this.props;
 
     const classes = this.classes;
     const styles = this.styles;
+    const forId = id !== "" && name !== "" ? id : "";
 
-    let labelClasses = cx(
+    let switchWrapperClasses = cx(
+        {
+          "switch": true
+        }
+    );
+
+    let switchClasses = cx(
       {
-        disabled,
+        "disabled": this.state.disabled,
         hidden,
-        inline
+        inline,
+        "leftLabelContent": leftLabel
       },
       classes.offClassName
     );
 
+    let labelClasses = cx(
+        {
+            "leftLabel": leftLabel,
+            "label":true,
+            "labelFont":true,
+            "labelSpacing":true
+        }
+    );
+
+    let switchLabel = label &&
+      <div styleName={labelClasses}>
+        <label htmlFor={forId}>
+          <span>{label}</span>
+        </label>
+      </div>
+    ;
     return (
-      <label
-        style={style}
-        styleName={labelClasses}
+      <div
         className={cx(className)}
-        /*eslint-disable */
-        style={styles.offColorStyle}
-        /*eslint-enable */
+        styleName={switchWrapperClasses}
       >
-        <InputCore
-          type="checkbox"
-          name={name}
-          styleName={classes.inputClassName}
-          onBeforeChange={this._handleBeforeChange}
-          checked={this.state.checked}
-        />
+        {switchLabel}
         <div
-          styleName={classes.buttonClassName}
-          style={styles.buttonColorStyle}
-        />
-        <div styleName={classes.onClassName} style={styles.onColorStyle} />
-      </label>
+          onClick={this._clickHandler}
+          styleName={switchClasses}
+          style={style}
+        >
+          <InputCore
+            type="checkbox"
+            name={name}
+            id={id}
+            styleName={classes.inputClassName}
+            checked={this.state.checked}
+            disabled={this.state.disabled}
+            hidden={this.state.disabled}
+          />
+          {/* handle */}
+          <div
+            styleName={classes.buttonClassName}
+            style={styles.buttonColorStyle}
+          />
+          {/* background */}
+          <div
+            styleName={classes.onClassName}
+            style={styles.onColorStyle} />
+        </div>
+      </div>
     );
   }
 }
 
 Switch.propTypes = {
+  /**
+   * Text for checkbox label
+   * @examples 'Some Label'
+   */
+  "label": PropTypes.string,
+  /**
+   * Allows user to move the label to the left of the Switch instead of above it
+   */
+  "leftLabel": PropTypes.bool,
   /** An Object, array, or string of CSS classes to apply to Switch.*/
   "className": PropTypes.oneOfType([
     PropTypes.string,
@@ -181,10 +228,19 @@ Switch.propTypes = {
    */
   "name": PropTypes.string,
   /**
+   * Defines an id for the switch input.
+   * @examples '<Input type="text" name="test"/>'
+   */
+  "id": PropTypes.string,
+  /**
    * Sets color that will be displayed when the switch is checked.
    * @examples '<Switch onColor="#ababab"/>'
    */
   "onColor": PropTypes.string,
+  /**
+   * Allows user to pass a callback for click events.
+   */
+  "onClick": PropTypes.func,
   /**
    * Sets color that will be displayed when the switch is unchecked.
    * @examples '<Switch offColor="#d3d3d3"/>'

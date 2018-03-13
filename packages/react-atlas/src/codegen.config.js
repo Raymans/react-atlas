@@ -149,6 +149,7 @@ dot.templateSettings = {
 /* TODO: Replace hardcoded array with a dynamic solution. */
 let components = [
   "accordion",
+  "alert",
   "avatar",
   "button",
   "card",
@@ -167,10 +168,15 @@ let components = [
   "radio",
   "radioGroup",
   "switch",
+  "tab",
   "table",
   "tableHeader",
+  "tabList",
+  "tabPanel",
+  "tabs",
   "task",
   "taskbar",
+  "text",
   "textArea",
   "textField",
   "timer",

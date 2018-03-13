@@ -3,144 +3,204 @@ import PropTypes from "prop-types";
 import messages from "../utils/messages";
 import cx from "classnames";
 
-const errorCodes = {
-  "MISSING_REQUIRED": 0
-};
-
 class Form extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    let childState = [];
-
-    React.Children.map(props.children, (child, i) => {
-      let state = {
-        "index": i,
-        "value": child.props.value || "",
-        "isValid": true,
-        "onChange": child.props.onChange || null
-      };
-
-      childState.push(state);
-
-      return child;
-    });
-
     this.state = {
-      "childState": childState
+      "childState": {}
     };
+  }
+
+  componentWillMount() {
+    this.updateChildState();
+  }
+
+  componentWillReceiveProps(nextProps) {
+    /* Update the childState to account for any children changes */
+    if (this.props.children !== nextProps.children) {
+      this.updateChildState();
+    }
+  }
+
+  /* Initialize Child state for all children with a name */
+  updateChildState() {
+    const recursiveChildState = children => {
+      let childState = {};
+
+      React.Children.forEach(children, child => {
+        if (!React.isValidElement(child)) {
+          return;
+        }
+
+        const childId = child.props.name;
+
+        /* Check if we have data, if so, we're the source of truth */
+        const currentState = this.state.childState[childId];
+        if (currentState) {
+          /* Allow them to modify onChange handler on the fly, but this is controlled. Form owns value/isValid */
+          childState[childId] = Object.assign(currentState, {
+            "onChange": child.props.onChange || null
+          });
+        } else if (childId) {
+          childState[childId] = {
+            "value": child.props.value,
+            "isValid": child.props.isValid || true,
+            "onChange": child.props.onChange || null
+          };
+        }
+        Object.assign(childState, recursiveChildState(child.props.children));
+      });
+
+      return childState;
+    };
+
+    const childState = recursiveChildState(this.props.children);
+
+    this.setState({
+      childState
+    });
+  }
+
+  /* Recursively render children with additional props */
+  renderChildren() {
+    const { childClasses, autocomplete, novalidate } = this.props;
+
+    const recursiveRenderChildren = children =>
+      React.Children.map(children, child => {
+        const { childState } = this.state;
+        let props = {};
+
+        /* Text strings are an invalid React component but should be returned or the DOM will render empty nodes */
+        if (!React.isValidElement(child)) {
+          return child;
+        }
+
+        const childId = child.props.name;
+
+        if (childId) {
+          props = {
+            "autocomplete": autocomplete,
+            "onChange": (value, event, isValid) =>
+              this.onChangeHandler(value, event, isValid),
+            "value": childState[childId].value,
+            "isValid": childState[childId].isValid,
+            "novalidate": novalidate
+          };
+        }
+
+        props.className = cx(child.props.className, childClasses);
+        props.children = recursiveRenderChildren(child.props.children);
+
+        return React.cloneElement(child, props);
+      });
+
+    return recursiveRenderChildren(this.props.children);
   }
 
   validate = () => {
     let isValid = true;
-    const data = React.Children.map(this.props.children, (child, i) => {
-      if (typeof child.props.required !== "undefined") {
-        if (this.state.childState[i].value === "") {
-          const state = this.state.childState;
-          state[i].isValid = false;
-          this.setState({ state });
-          isValid = false;
+
+    /* Validation needs to be refactored to use a Field level validation check or callback */
+
+    /* Recursively step through children and check if a field is required and empty */
+    const recursiveRequiredValidation = children => {
+      let invalidChildren = {};
+
+      React.Children.forEach(children, child => {
+        if (!React.isValidElement(child)) {
           return;
         }
-      }
 
-      /* Skip children with no name prop. */
-      if (!child.props.name) {
-        return;
-      }
+        const childId = child.props.name;
+        if (childId) {
+          if (child.props.required) {
+            if (
+              typeof this.state.childState[childId].value === "undefined" ||
+              this.state.childState[childId].value === ""
+            ) {
+              isValid = false;
+              invalidChildren[childId] = Object.assign(
+                {},
+                this.state.childState[childId],
+                { "isValid": false }
+              );
+            }
+          }
+        }
+        Object.assign(
+          invalidChildren,
+          recursiveRequiredValidation(child.props.children)
+        );
+      });
 
-      let childData = {
-        "name": child.props.name,
-        "value": this.state.childState[i].value
-      };
+      return invalidChildren;
+    };
 
-      return childData;
-    });
+    const newState = recursiveRequiredValidation(this.props.children);
+    if (Object.keys(newState).length !== 0) {
+      /* Copy state and set to avoid mutating existing state */
+      const childState = Object.assign({}, this.state.childState, newState);
+      this.setState({
+        childState
+      });
+    }
 
-    if (isValid) {
-      return data;
-    } else {
+    if (!isValid) {
       return null;
     }
-  };
 
-  transformData = data => {
-    let sumbitData = {};
-    for (let i = 0; i < data.length; i++) {
-      let key = data[i].name;
-      let value = data[i].value;
-
-      sumbitData[key] = value;
-    }
-
-    return sumbitData;
+    const { childState } = this.state;
+    return Object.keys(childState).reduce((data, key) => {
+      data[key] = childState[key].value;
+      return data;
+    }, {});
   };
 
   submitHandler = e => {
-    /* Prevent form submission if action prop is not set. */
-    if (!this.props.action) {
+    if (typeof this.props.action === "undefined") {
       e.preventDefault();
     }
-
-    /* Validate children components before submiting. */
+    /* Validate children components before submitting. */
     let data = this.validate();
     if (!data) {
-      /* Prevent form submission when action is set and the
-       * form is not valid. */
-      if (this.props.action) {
-        e.preventDefault();
-      }
-
+      e.preventDefault();
       if (typeof this.props.onError !== "undefined") {
-        this.props.onError(
-          errorCodes.MISSING_REQUIRED,
-          messages.missingRequired
-        );
+        this.props.onError(messages.missingRequired);
       }
       return;
     }
 
-    /* Tranform data array from validate() to an object using name
-     * as the key and the child's value as the object value. */
-    let sumbitData = this.transformData(data);
-
-    /* Check if onSubmit was set. Call onSubmit if
-  	 * it was passed throw a error if not set. */
+    /* Check if onSubmit was set. Call onSubmit.*/
     if (this.props.onSubmit) {
-      this.props.onSubmit(e, sumbitData);
-    } else {
-      throw messages.onSubmitAction;
+      let result = this.props.onSubmit(e, data);
+      if (result === false) {
+        e.preventDefault();
+      }
     }
   };
 
   /* Fires whenever a child input is changed. */
-  onChangeHandler = (value, event, isValid, state) => {
+  onChangeHandler = (value, event, isValid) => {
     if (isValid === false && typeof this.props.onError !== "undefined") {
-      this.props.onError(errorCodes.MISSING_REQUIRED, messages.missingRequired);
+      this.props.onError(messages.missingRequired);
     }
-    let index = state.index;
-    let childState = [];
-    let count = React.Children.count(this.props.children);
 
-    for (let i = 0; i < count; i++) {
-      if (i === index) {
-        if (this.state.childState[i].onChange) {
-          this.state.childState[i].onChange(value, event, isValid);
-        }
-        let onChange = this.state.childState[i].onChange;
-        let child = {
-          "index": i,
-          "value": value,
-          "isValid": isValid,
-          "onChange": onChange
-        };
-        childState.push(child);
-        continue;
-      }
+    const childId = event.target.name;
 
-      let child = this.state.childState[i];
-      childState.push(child);
+    if (this.state.childState[childId].onChange) {
+      this.state.childState[childId].onChange(value, event, isValid);
     }
+
+    let child = {
+      "value": value,
+      "isValid": isValid,
+      "onChange": this.state.childState[childId].onChange || null
+    };
+
+    const childState = Object.assign({}, this.state.childState, {
+      [childId]: child
+    });
 
     this.setState({ "childState": childState });
   };
@@ -148,28 +208,14 @@ class Form extends React.PureComponent {
   render() {
     const {
       className,
-      children,
       action,
       method,
-      childClasses,
-      style
+      style,
+      target,
+      name,
+      enctype,
+      novalidate
     } = this.props;
-    /* Loop through children components and set onChange handlers
-     * and add CSS classes. */
-    let kids = React.Children.map(children, (child, i) => {
-      let classes = cx(child.props.className, childClasses);
-
-      let props = {
-        "className": classes,
-        "onChange": (value, event, isValid) =>
-          this.onChangeHandler(value, event, isValid, this.state.childState[i]),
-        "value": this.state.childState[i].value,
-        "isValid": this.state.childState[i].isValid,
-        "noValidate": true
-      };
-
-      return React.cloneElement(child, props);
-    });
 
     return (
       <form
@@ -178,45 +224,77 @@ class Form extends React.PureComponent {
         method={method}
         className={cx(className)}
         onSubmit={this.submitHandler}
-        noValidate
+        target={target}
+        name={name}
+        encType={enctype}
+        noValidate={novalidate}
       >
-        {kids}
+        {this.renderChildren()}
       </form>
     );
   }
 }
 
 Form.propTypes = {
-  /** Children components, Usually a Textfield, Dropdown, Input, etc */
+  /** The URL of the server that Form will send data to. Data will be passed as a querystring.*/
+  "action": PropTypes.string,
+
+  /** When true, input elements will have their values
+   * automatically completed by the browser. This setting can be overridden
+   * by an autocomplete attribute on an element belonging to the form. */
+  "autocomplete": PropTypes.bool,
+
+  /** The text that will be displayed inside the submit button. */
+  "buttonText": PropTypes.string,
+
+  /** An object, array, or string of CSS classes to
+   * apply to Form's children components.*/
+  "childClasses": PropTypes.node,
+
+  /** Children components, usually a TextField, Dropdown, Checkbox, etc. */
   "children": PropTypes.node,
-  /** An Object, array, or string of CSS classes to apply to Form.*/
+
+  /** An object, array, or string of CSS classes to apply to Form.*/
   "className": PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.object,
     PropTypes.array
   ]),
-  /** A callback that is fired when the form has passed validation
-   * and is ready to submit. Returns the form data and the event object.  */
-  "onSubmit": PropTypes.func,
-  /** A Callback that is called when there is a form error. */
-  "onError": PropTypes.func,
-  /** The URL of the server to send data to. */
-  "action": PropTypes.string,
-  /** The text displayed inside the submit button. */
-  "buttonText": PropTypes.string,
-  /** The HTTP method to use when action is set and
-   * the form is submitting. */
+
+  /** When the value of the method attribute is post, enctype is the
+   *  MIME type of content that will be used to submit Form to the server. */
+  "enctype": PropTypes.string,
+
+  /** The HTTP method that will be used when action is set and
+   * the form is submitting. Default is POST.*/
   "method": PropTypes.string,
-  /** An Object, array, or string of CSS classes to
-     * apply to form children components.*/
-  "childClasses": PropTypes.node,
-  /** Pass inline styling here. **/
-  "style": PropTypes.object
+
+  /** The name of the Form.  */
+  "name": PropTypes.string,
+
+  /** When true, Form will not use HTML5 validation. */
+  "novalidate": PropTypes.bool,
+
+  /** A Callback that will be executed when there is a form error.
+   * _Example: function(errorMsg)_*/
+  "onError": PropTypes.func,
+
+  /** A callback that will be executed when the form has passed validation
+   * and is ready to submit. Returns the form data and the event object.
+   * _Example: function(event, data) {}_*/
+  "onSubmit": PropTypes.func,
+
+  /** Pass inline styling here. */
+  "style": PropTypes.object,
+
+  /** A name or keyword indicating where to display the response that will be received after submitting the form.*/
+  "target": PropTypes.string
 };
 
 Form.defaultProps = {
   "buttonText": "Submit",
-  "method": "POST"
+  "method": "POST",
+  "novalidate": true
 };
 
 export default Form;

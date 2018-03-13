@@ -8,14 +8,53 @@ import cx from "classnames";
 class Card extends React.PureComponent {
   constructor(props) {
     super(props);
+
   }
   render() {
-    const { children, className, legend, style } = this.props;
-    return (
+    const { children, className, legend, style, standardFieldset, image, title } = this.props;
+    let cardBody = children ?
+      <div
+        styleName={"cardBody"}
+      >
+        {children}
+      </div>
+      : null;
+
+    let isFieldset = standardFieldset ? 
       <fieldset style={style} styleName={"card"} className={cx(className)}>
         {legend && <legend styleName={"legend"}>{legend}</legend>}
         {children}
       </fieldset>
+      : null;
+
+    let useImage = image ? 
+      <img
+        src={image}
+        styleName={"image"}
+      />
+      : null;
+
+    let Title = title ?
+      <div styleName={"title"}>{title}</div>
+      : null;
+
+    let card = !standardFieldset ? 
+      <div        
+        style={style}
+        styleName={"card"} 
+        className={cx(className)}
+      >
+        {useImage}
+        {Title}
+        {cardBody}
+      </div>
+      : null;
+
+    return (
+      <React.Fragment>
+        {isFieldset}
+        {card}
+      </React.Fragment>
     );
   }
 }
@@ -27,7 +66,7 @@ Card.propTypes = {
    */
   "children": PropTypes.node.isRequired,
 
-  /** An Object, array, or string of CSS classes to apply to card.*/
+  /** An object, array, or string of CSS classes to apply to card.*/
   "className": PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.object,
@@ -35,16 +74,32 @@ Card.propTypes = {
   ]),
 
   /**
-   * Title of the Card
+   * Path to an image that will be displayed in Card.
+   * @examples "http://path.to/an/image.jpg"
+   */
+  "image": PropTypes.string,
+
+  /**
+   * Legend that will be displayed on Card when standardFieldset prop is true.
    */
   "legend": PropTypes.string,
 
   /**
+   * When true, will generate a fieldset Card.
+   * @example <Card standardFieldset>{children}</Card>
+   */
+  "standardFieldset": PropTypes.bool,
+
+  /**
    * Pass inline styles here.
    */
-  "style": PropTypes.object
-};
+  "style": PropTypes.object,
 
-Card.defaultProps = { "children": <p>Some card text.</p> };
+  /**
+   * Title that will be displayed inside Cards that do not have the standardFieldset prop.
+   * @examples "Title Words" will output "Title Words"
+   */
+  "title": PropTypes.string
+};
 
 export default Card;

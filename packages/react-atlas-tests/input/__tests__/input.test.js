@@ -4,6 +4,41 @@ import { InputCore } from "../../../react-atlas-core/src/Input/index";
 
 import { verifyPropsDefaultValue } from "../../utils/propsVerification";
 
+import renderer from 'react-test-renderer';
+
+describe("Test Input component render", () => {
+	it('Render correctly', () => {
+    const tree = renderer.create(
+		<InputCore
+		  isValid={true}
+			className={"class"}
+			type={"text"}
+			id={"ID"}
+			name={"InputName"}
+			required={false}
+			requiredText={false}
+			errorText={"Error occured"}
+			errorLocation={"location"}
+			value={"Value"}
+			disabled={false}
+			hidden={false}
+			checked={false}
+			maxLength={15}
+			placeholder={"Text here"}
+			multiline={false}
+			small={true}
+			medium={false}
+			large={false}
+			mask={""}
+			validator={()=>{return true}}
+			onBeforeChange={()=>{return true}}
+			onChange={()=>{return true}}
+			uppercase={false}
+		/>).toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+});
+
 describe("Blank test", () => {
   it("blank test", () => {
     const component = mount(<InputCore type="email" />);
@@ -25,12 +60,10 @@ function _validate(input, positiveCase) {
     />
   );
 
-  expect(component.state().errorText).toEqual(undefined);
   expect(component.state().isValid).toEqual(true);
   component.setState({ value: input });
   component.find("input").simulate("change");
   if (positiveCase) {
-    expect(component.state().errorText).toEqual(undefined);
     expect(component.state().isValid).toEqual(true);
   } else {
     expect(component.state().errorText).toEqual("That is NOT a number");
@@ -282,7 +315,6 @@ describe("Suite - Required field", () => {
       .find("input")
       .simulate("change", { target: { value: "Some text." } });
     expect(component.state().isValid).toEqual(true);
-    expect(component.state().errorText).toEqual(undefined);
   });
 
   it("Check behavior when field is set to not required", () => {
@@ -290,7 +322,6 @@ describe("Suite - Required field", () => {
 
     component.find("input").simulate("change", { target: { value: "" } });
     expect(component.state().isValid).toEqual(true);
-    expect(component.state().errorText).toEqual(undefined);
   });
 
   it("Check behavior when field is set to required and validated - Positive case", () => {
@@ -308,7 +339,6 @@ describe("Suite - Required field", () => {
       .find("input")
       .simulate("change", { target: { value: "Some text." } });
     expect(component.state().isValid).toEqual(true);
-    expect(component.state().errorText).toEqual(undefined);
   });
 
   it("Check behavior when field is set to required and validated - Negative case", () => {
