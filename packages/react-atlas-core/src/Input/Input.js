@@ -272,7 +272,13 @@ class Input extends React.PureComponent {
       required,
       ...others
     } = this.props;
-
+  
+    const filterProps = Object.keys(others).filter(prop => !Input.propTypes[prop])
+      .reduce((obj, key) => {
+        obj[key] = others[key];
+        return obj;
+      }, {});
+    
     /* If checkbox, we need to render only input component (no wrappers) */
     let isCheckbox = type === "checkbox";
     let isRadio = type === "radio";
@@ -307,7 +313,7 @@ class Input extends React.PureComponent {
 
     let inputElement = multiline ? 
       <textarea
-        {...others}
+        {...filterProps}
         id={id}
         name={name}
         rows={rows}
@@ -321,7 +327,7 @@ class Input extends React.PureComponent {
       />
      : 
       <input
-        {...others}
+        {...filterProps}
         type={type}
         name={name}
         id={id}
@@ -343,7 +349,7 @@ class Input extends React.PureComponent {
 
     return isCheckbox ? 
       <input
-        {...others}
+        {...filterProps}
         style={style}
         type="checkbox"
         name={name}

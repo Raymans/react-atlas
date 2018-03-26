@@ -3,7 +3,7 @@
 exports[`Test correct render Test correct render 1`] = `
 <div
   className=""
-  style={undefined}
+  image="picture.jpg"
   styleName="avatar"
   title="testTitle"
 >
