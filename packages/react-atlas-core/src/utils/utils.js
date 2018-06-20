@@ -1,3 +1,5 @@
+import React from "react";
+
 export default {
   angleFromPositions(cx, cy, ex, ey) {
     const theta = Math.atan2(ey - cy, ex - cx) + Math.PI / 2;
@@ -114,5 +116,19 @@ export default {
       return comp.type.displayName || comp.type.name || comp.type || null;
     }
     return null;
+  },
+  filter(object, excludes) {
+    return Object.keys(object)
+      .filter(obj => !excludes[obj])
+      .reduce((obj, key) => {
+        obj[key] = object[key];
+        return obj;
+      }, {});
+  },
+  getRequiredText(reqText) {
+    return <span styleName={"error_text"}>{reqText}</span>;
+  },
+  getErrorMessage(errorMessage) {
+    return <div styleName={"error_message"}>{errorMessage}</div>;
   }
 };

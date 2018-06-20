@@ -67,7 +67,10 @@ class Dropdown extends React.PureComponent {
     let childrenState = React.Children.map(
       this.state.children,
       (child, index) => {
-        let value = (child.props.value !== null && typeof child.props.value !== "undefined") ? child.props.value : "";
+        let value =
+          child.props.value !== null && typeof child.props.value !== "undefined"
+            ? child.props.value
+            : "";
         let display = child.props.children;
         if (value === this.props.value) {
           initialValue = value;
@@ -90,7 +93,11 @@ class Dropdown extends React.PureComponent {
   getInitialValue = (childrenState, initialValue) => {
     if (this.state.value !== null) {
       return this.state.value;
-    } else if (this.props.value !== null && typeof this.props.value !== "undefined" && initialValue !== null) {
+    } else if (
+      this.props.value !== null &&
+      typeof this.props.value !== "undefined" &&
+      initialValue !== null
+    ) {
       return initialValue;
     } else if (this.props.defaultText) {
       return null;
@@ -104,7 +111,11 @@ class Dropdown extends React.PureComponent {
   getInitialDisplay = (childrenState, initialDisplay) => {
     if (this.state.output !== null) {
       return this.state.output;
-    } else if (this.props.value !== null && typeof this.props.value !== "undefined" && initialDisplay !== null) {
+    } else if (
+      this.props.value !== null &&
+      typeof this.props.value !== "undefined" &&
+      initialDisplay !== null
+    ) {
       return initialDisplay;
     } else if (this.props.defaultText) {
       return this.props.defaultText;
@@ -118,7 +129,11 @@ class Dropdown extends React.PureComponent {
   getInitialIndex = initialIndex => {
     if (this.state.index !== null) {
       return this.state.index;
-    } else if (this.props.value !== null && typeof this.props.value !== "undefined" && initialIndex !== null) {
+    } else if (
+      this.props.value !== null &&
+      typeof this.props.value !== "undefined" &&
+      initialIndex !== null
+    ) {
       return initialIndex;
     } else if (this.props.defaultText) {
       return null;
@@ -349,7 +364,6 @@ class Dropdown extends React.PureComponent {
       className,
       required,
       customLabel,
-      width,
       disabled,
       name,
       inline,
@@ -422,7 +436,7 @@ class Dropdown extends React.PureComponent {
     const labelClasses = cx({
       "labelSpacing": true,
       "leftLabel": leftLabel
-    })
+    });
 
     let list = null;
     if (active === true) {
@@ -453,13 +467,12 @@ class Dropdown extends React.PureComponent {
         }}
         styleName={buttonClasses}
         type={"button"}
+        style={style}
       >
         <span>{this.state.output}</span>
         <i styleName="arrow" />
       </ButtonCore>
     ;
-
-    const dropdownWidth = width || "100%";
 
     return (
       <div
@@ -478,8 +491,8 @@ class Dropdown extends React.PureComponent {
         }}
       >
         {label}
-        <div styleName={contentClasses} style={{ "minWidth": "100px","width": dropdownWidth }}>
-          <div styleName={"fullWidth"}>{button}</div>
+        <div style={style} styleName={contentClasses}>
+          <div style={style} styleName={"fullWidth"}>{button}</div>
           {list}
           <input type="hidden" value={this.state.value} />
         </div>
@@ -490,7 +503,6 @@ class Dropdown extends React.PureComponent {
 }
 
 Dropdown.propTypes = {
-
   /**
    * When true, Dropdown will display as open.
    */
@@ -503,9 +515,9 @@ Dropdown.propTypes = {
 
   /** An object, array, or string of CSS classes to apply to Dropdown.*/
   "className": PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object,
-      PropTypes.array
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.array
   ]),
 
   /* . */
@@ -584,10 +596,7 @@ Dropdown.propTypes = {
   /**
    * The initial value that Dropdown will default to.
    */
-  "value": PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.number
-  ]),
+  "value": PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 
   /**
    * Will set width of Dropdown.

@@ -4,8 +4,7 @@ import { CheckboxCore } from "../../../react-atlas-core/src/Checkbox/index";
 
 import { verifyPropsDefaultValue } from "../../utils/propsVerification";
 
-import renderer from 'react-test-renderer';
-
+import renderer from "react-test-renderer";
 
 describe("Test checkbox component", () => {
   it("Test default props", function() {
@@ -19,8 +18,8 @@ describe("Test checkbox component", () => {
     const result = mount(<CheckboxCore label={"labelText"} />);
     expect(result.text()).toContain("labelText");
   });
-  
-  it('renders correctly', () => {
+
+  it("renders correctly", () => {
     const tree = renderer.create(<CheckboxCore label={"labelText"} />).toJSON();
     expect(tree).toMatchSnapshot();
   });
@@ -30,7 +29,7 @@ describe("Test checkbox component - Default values", () => {
   it("Test checkbox component - Custom values", function() {
     const component = mount(
       <CheckboxCore
-        defaultChecked={true}
+        defaultChecked
         title="Adrian rules!!"
         label="Disabled checkbox"
       />
@@ -65,7 +64,7 @@ describe("Test checkbox component - Default values", () => {
   });
 
   it("Test checkbox component (disabled) - Click event", function() {
-    const comp = mount(<CheckboxCore disabled={true} />);
+    const comp = mount(<CheckboxCore disabled />);
     expect(comp.state().checked).toEqual(false);
     comp.simulate("click");
     expect(comp.state().checked).toEqual(false);
@@ -132,5 +131,15 @@ describe("Test checkbox component - Default values", () => {
     expect(comp.state().checked).toEqual(false);
     comp.simulate("click");
     expect(comp.state().checked).toEqual(false);
+  });
+});
+describe("Test checkbox component - update from props", () => {
+  it("update checked prop", function() {
+    const component = mount(<CheckboxCore label="Checkbox" />);
+    expect(component.state().checked).toEqual(false);
+    component.setProps({ "checked": true });
+    expect(component.state().checked).toEqual(true);
+    component.setProps({ "checked": false });
+    expect(component.state().checked).toEqual(false);
   });
 });

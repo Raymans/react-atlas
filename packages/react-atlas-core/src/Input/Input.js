@@ -259,19 +259,16 @@ class Input extends React.PureComponent {
       medium,
       large,
       type,
-      name,
-      id,
       multiline,
-      placeholder,
       disabled,
       hidden,
       errorLocation,
-      checked,
       style,
       rows,
-      required
+      ...others
     } = this.props;
 
+    const elementsProps = utils.filter(others, Input.customPropTypes);
     /* If checkbox, we need to render only input component (no wrappers) */
     let isCheckbox = type === "checkbox";
     let isRadio = type === "radio";
@@ -306,27 +303,21 @@ class Input extends React.PureComponent {
 
     let inputElement = multiline ? 
       <textarea
-        id={id}
-        name={name}
+        {...elementsProps}
         rows={rows}
         value={this.state.value}
-        placeholder={placeholder}
         styleName={inputClasses}
         className={cx(className)}
         onChange={this._handleChange}
         onBlur={this._handleChange}
-        required={required}
       />
      : 
       <input
+        {...elementsProps}
         type={type}
-        name={name}
-        id={id}
         value={this.state.value}
-        placeholder={placeholder}
         styleName={inputClasses}
         className={cx(className)}
-        required={required}
         ref={input => {
           this.input = input;
         }}
@@ -340,13 +331,10 @@ class Input extends React.PureComponent {
 
     return isCheckbox ? 
       <input
+        {...elementsProps}
         style={style}
         type="checkbox"
-        name={name}
         className={cx(className)}
-        id={id}
-        checked={checked}
-        required={required}
         {...eventHandlers}
       /> // No styleName prop is needed on checkbox because opacity is set to 0.
      : 
@@ -357,6 +345,15 @@ class Input extends React.PureComponent {
     ;
   }
 }
+
+Input.customPropTypes = {
+  "errorText": PropTypes.string,
+  "isValid": PropTypes.bool,
+  "validator": PropTypes.func,
+  "onBeforeChange": PropTypes.func,
+  "uppercase": PropTypes.bool,
+  "mask": PropTypes.string
+};
 
 Input.propTypes = {
   "isValid": PropTypes.bool,
@@ -387,12 +384,6 @@ Input.propTypes = {
    */
   "required": PropTypes.bool,
   /**
-   * Defines error message to be displayed when input is empty and required.
-   * Otherwise, it will display pre-defined required field message.
-   * @examples '<Input type="text" required requiredText="Custom required msg"/>'
-   */
-  "requiredText": PropTypes.string,
-  /**
    * Defines error message to be displayed on custom validation.
    * @examples '<Input type="text" validator={this.validateTest} errorText="Custom validation msg"/>'
    */
@@ -401,7 +392,7 @@ Input.propTypes = {
    * Defines error messages location (on validation).
    * > Valid values are 'right' and 'bottom'.
    * > Default value is 'right'.
-   * @examples '<Input type="text" required requiredText="Custom required msg" errorLocation="buttom"/>'
+   * @examples '<Input type="text" required errorLocation="buttom"/>'
    */
   "errorLocation": PropTypes.string,
   /**

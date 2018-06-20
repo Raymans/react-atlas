@@ -27,17 +27,19 @@ class Alert extends React.PureComponent {
       "alert": true,
       "success": type === "success",
       "warning": type === "warning",
-      "danger": type === "danger"
+      "danger": type === "danger",
+      hidden
     });
     return (
       <React.Fragment>
-        {this.state.visible &&
+        {this.state.visible && 
           <div
-            hidden={hidden}
             className={cx(className)}
             style={style}
-            styleName={alertClasses}>
-            {dismissible &&
+            styleName={alertClasses}
+          >
+            {children}
+            {dismissible && 
               <div
                 onClick={this._closeAlert}
                 type="button"
@@ -48,7 +50,6 @@ class Alert extends React.PureComponent {
                 <span aria-hidden="true">×</span>
               </div>
             }
-            {children}
           </div>
         }
       </React.Fragment>

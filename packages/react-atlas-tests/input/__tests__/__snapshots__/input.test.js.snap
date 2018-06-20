@@ -5,8 +5,10 @@ exports[`Test Input component render Render correctly 1`] = `
   styleName="container"
 >
   <input
+    checked={false}
     className="class"
     id="ID"
+    maxLength={15}
     name="InputName"
     onBlur={[Function]}
     onChange={[Function]}
@@ -16,6 +18,7 @@ exports[`Test Input component render Render correctly 1`] = `
     onPaste={[Function]}
     placeholder="Text here"
     required={false}
+    requiredText={false}
     styleName="input small"
     type="text"
     value="Value"

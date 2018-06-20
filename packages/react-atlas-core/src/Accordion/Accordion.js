@@ -28,7 +28,7 @@ class Accordion extends React.PureComponent {
 
   _getExpandedPanels = children => {
     let childArray = [];
-    children.map(child => {
+    React.Children.map(children, child => {
       if (child.props.expanded) {
         childArray.push(true);
       } else {
@@ -139,7 +139,7 @@ class Accordion extends React.PureComponent {
             {child.props.title}
           </div>
           <div styleName={panelClasses}>
-            { this.state.activeChildArray[i] === true && 
+            {this.state.activeChildArray[i] === true && 
               <div styleName={"panel"}>{child}</div>
             }
           </div>
